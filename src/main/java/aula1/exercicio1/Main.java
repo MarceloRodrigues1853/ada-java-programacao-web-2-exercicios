@@ -1,57 +1,93 @@
 package aula1.exercicio1;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
+import aula1.exercicio1.model.Produto;
+import aula1.exercicio1.service.ProductService;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final ProductService productService = new ProductService();
+
     public static void main(String[] args) {
-        // Scanner para capturar o que o usuário digita no console
-        Scanner teclado = new Scanner(System.in);
+        int option = 0;
 
-        System.out.println("=== SISTEMA DE BUSCA DE PRODUTOS ===");
-        System.out.print("Digite o termo que deseja pesquisar (ex: phone, mascara): ");
-        String termoBusca = teclado.nextLine();
+        while (option != 3) {
+            showMenu();
+            option = readInt("Escolha uma opção: ");
 
-        try {
-            // Parte 4: Montagem da URL dinâmica de pesquisa conforme o PDF
-            String enderecoApi = "https://dummyjson.com/products/search?q=" + termoBusca;
-            URL url = new URL(enderecoApi);
-
-            // Abre a conexão
-            HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-            conexao.setRequestMethod("GET");
-
-            // Parte 5: Tratamento de erro de conexão baseado no Status Code
-            int statusCode = conexao.getResponseCode();
-
-            if (statusCode == 200) {
-                // Conecta o leitor à resposta da internet
-                Scanner leitorRede = new Scanner(conexao.getInputStream());
-                StringBuilder jsonBruto = new StringBuilder();
-
-                while (leitorRede.hasNext()) {
-                    jsonBruto.append(leitorRede.nextLine());
+            try {
+                switch (option) {
+                    case 1 -> buscarProdutos();
+                    case 2 -> listarTodos();
+                    case 3 -> System.out.println("Encerrando Programa ...");
+                    default -> System.out.println("Opção inválida.");
                 }
-                leitorRede.close();
-
-                System.out.println("\n--- Resultado da Busca para '" + termoBusca + "' ---");
-                System.out.println(jsonBruto.toString());
-
-            } else {
-                // Trata erros retornados pela própria API (ex: endpoint inválido ou erro interno)
-                System.out.println("Erro da API! O servidor respondeu com código HTTP: " + statusCode);
+            } catch (Exception e) {
+                // Tratamento de erros exigido na Parte 5 (API fora, etc)
+                System.out.println("Erro na operação: " + e.getMessage());
             }
+        }
+    }
 
-        } catch (java.net.UnknownHostException e) {
-            // Parte 5: Captura especificamente o erro de "internet fora do ar"
-            System.out.println("Erro: Não foi possível conectar à internet. Verifique sua rede.");
-        } catch (Exception e) {
-            // Captura qualquer outra falha genérica de código
-            System.out.println("Ocorreu uma falha inesperada: " + e.getMessage());
-        } finally {
-            teclado.close(); // Fecha o recurso do teclado de forma segura
+    private static void showMenu() {
+        System.out.println("""
+                =========================================
+                DUMMY JSON PRODUCTS APP - AULA 1
+                =========================================
+                1 - Buscar produtos
+                2 - Listar produtos
+                3 - Sair
+                =========================================
+                """);
+    }
+
+    private static void listarTodos() throws Exception {
+        System.out.println("\nBuscando todos os produtos...");
+        List<Produto> produtos = productService.listarProdutos();
+        exibirLista(produtos);
+    }
+
+    private static void buscarProdutos() throws Exception {
+        // Parte 4: Entrada dinâmica de busca
+        System.out.print("Digite o produto para busca (ex: phone): ");
+        String termo = scanner.nextLine();
+
+        if (termo.isBlank()) {
+            System.out.println("Termo de busca não pode ser vazio.");
+            return;
+        }
+
+        List<Produto> produtos = productService.buscarProdutos(termo);
+        exibirLista(produtos);
+    }
+
+    private static void exibirLista(List<Produto> produtos) {
+        if (produtos.isEmpty()) {
+            System.out.println("Nenhum produto encontrado.");
+            return;
+        }
+
+        System.out.println("\nProdutos encontrados:");
+        System.out.println("-----------------------------------------");
+        // Parte 2: Exibir apenas título, preço e categoria formatados de forma amigável
+        for (Produto p : produtos) {
+            System.out.println("Produto:   " + p.getTitulo());
+            System.out.println("Preço:     $ " + p.getPreco());
+            System.out.println("Categoria: " + p.getCategoria());
+            System.out.println("-----------------------------------------");
+        }
+    }
+
+    private static int readInt(String message) {
+        while (true) {
+            try {
+                System.out.print(message);
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Digite um número válido.");
+            }
         }
     }
 }
