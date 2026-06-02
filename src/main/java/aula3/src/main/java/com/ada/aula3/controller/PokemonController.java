@@ -3,6 +3,9 @@ package com.ada.aula3.controller;
 import com.ada.aula3.model.PokemonBattleCard;
 import com.ada.aula3.model.PokemonSummary;
 import com.ada.aula3.service.PokemonService;
+import jakarta.validation.Valid;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,29 +19,29 @@ public class PokemonController {
         this.pokemonService = pokemonService;
     }
 
+    /*
+     * PARTE 4 - Adicionar cache na consulta de Pokémon
+     */
     @GetMapping("/{nameOrId}/summary")
+    @Cacheable("pokemons")
     public ResponseEntity<PokemonSummary> obterResumo(@PathVariable String nameOrId) {
-        try {
-            // Ajustado para obterResumoPokemon (com o "o" minúsculo e casado com o Service)
-            PokemonSummary resumo = pokemonService.obterResumoPokemon(nameOrId);
-            return ResponseEntity.ok(resumo);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        PokemonSummary resumo = pokemonService.obterResumoPokemon(nameOrId);
+        return ResponseEntity.ok(resumo);
     }
 
-    /**
-     * Endpoint do Desafio Extra: GET /api/pokemon/{nameOrId}/battle-card
-     * Retorna a versão compacta estruturada para cartas de jogos.
-     */
     @GetMapping("/{nameOrId}/battle-card")
+    @Cacheable("pokemons")
     public ResponseEntity<PokemonBattleCard> obterCardBatalha(@PathVariable String nameOrId) {
-        try {
-            // Invoca a nova lógica de negócio do Service
-            PokemonBattleCard card = pokemonService.obterCardBatalha(nameOrId);
-            return ResponseEntity.ok(card); // Retorna 200 OK com o JSON do card
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build(); // Retorna 404 se o pokémon sumir
-        }
+        PokemonBattleCard card = pokemonService.obterCardBatalha(nameOrId);
+        return ResponseEntity.ok(card);
+    }
+
+    /*
+     * PARTE 2 - Garantir que os endpoints POST executem as validações com @Valid
+     */
+    @PostMapping
+    public ResponseEntity<PokemonSummary> criarPokemon(@Valid @RequestBody PokemonSummary pokemonSummary) {
+        // Apenas retorna o objeto enviado para validar se o Bean Validation barra campos incorretos
+        return ResponseEntity.status(HttpStatus.CREATED).body(pokemonSummary);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration // Indica que é uma classe de configuração do Spring
 public class RestTemplateConfig {
 
-    @Bean // Cria e disponibiliza o RestTemplate para injeção em outras classes
+    @Bean // Define o RestTemplate como um Bean gerenciado pelo Spring [cite: 208]
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
