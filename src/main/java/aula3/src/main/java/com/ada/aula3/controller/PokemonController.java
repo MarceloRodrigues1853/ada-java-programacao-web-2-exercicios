@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -43,5 +44,28 @@ public class PokemonController {
     public ResponseEntity<PokemonSummary> criarPokemon(@Valid @RequestBody PokemonSummary pokemonSummary) {
         // Apenas retorna o objeto enviado para validar se o Bean Validation barra campos incorretos
         return ResponseEntity.status(HttpStatus.CREATED).body(pokemonSummary);
+    }
+
+    /*
+     * Desafio Extra: Protegendo o Método
+     */
+    @PreAuthorize("hasRole('ADMIN')") // Exige que o usuário seja o ADMIN (neste caso, o oak)
+    @PostMapping("/captured")
+    public ResponseEntity<?> capturarPokemon(@RequestBody PokemonSummary pokemon) {
+        // O código original de salvar o pokémon continua aqui dentro
+        return ResponseEntity.status(HttpStatus.CREATED).body(pokemon);
+    }
+
+    // 1. Rota para LISTAR os capturados (Requer apenas estar logado - Ash ou Oak podem ver)
+    @GetMapping("/captured")
+    public ResponseEntity<String> listarCapturados() {
+        return ResponseEntity.ok("Acesso Permitido: Aqui está a lista dos seus Pokémon capturados!");
+    }
+
+    // 2. Rota para LIBERAR um Pokémon (Requer ser ADMIN - Desafio Extra)
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/captured/{id}")
+    public ResponseEntity<String> liberarPokemon(@PathVariable("id") String id) {
+        return ResponseEntity.ok("Acesso Permitido ADMIN: Pokémon " + id + " foi solto pelo Professor Oak!");
     }
 }
